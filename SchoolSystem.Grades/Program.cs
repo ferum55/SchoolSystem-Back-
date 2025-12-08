@@ -15,7 +15,7 @@ builder.Services.AddHttpClient();
 
 // DB Context
 builder.Services.AddDbContext<GradesDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite("Data Source=grades.db"));
 
 // MassTransit
 builder.Services.AddMassTransit(x =>
@@ -50,11 +50,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Auto-migrate
+// Auto-migrate - RESET DATABASE ON STARTUP (for testing)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<GradesDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.EnsureDeleted(); // Delete existing database
+    db.Database.EnsureCreated(); // Create fresh database
 }
 
 app.UseAuthorization();

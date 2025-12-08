@@ -1,14 +1,25 @@
 using MassTransit;
-using SchoolSystem.Notification.Consumers;
+using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using SchoolSystem.Notification.Consumers;
+using SchoolSystem.Notification.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Notification Service API", Version = "v1" });
+});
 
+// DB Context
+builder.Services.AddDbContext<NotificationDbContext>(options =>
+    options.UseSqlite("Data Source=notification.db"));
+
+// MassTransit
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<GradeCreatedConsumer>();
@@ -19,11 +30,7 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
-
-        cfg.ReceiveEndpoint("notification-service", e =>
-        {
-            e.ConfigureConsumer<GradeCreatedConsumer>(context);
-        });
+        cfg.ConfigureEndpoints(context);
     });
 });
 
@@ -39,6 +46,14 @@ builder.Services.AddOpenTelemetry()
     });
 
 var app = builder.Build();
+
+// Auto-migrate - RESET DATABASE ON STARTUP (for testing)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+    db.Database.EnsureDeleted(); // Delete existing database
+    db.Database.EnsureCreated(); // Create fresh database
+}
 
 if (app.Environment.IsDevelopment())
 {

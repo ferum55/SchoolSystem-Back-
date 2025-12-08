@@ -19,13 +19,4 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 app.Run();
 
-[ApiController]
-[Route("[controller]")]
-public class ReportsController : ControllerBase
-{
-    [HttpGet("student/{id}")]
-    public IActionResult GetStudentReport(string id)
-    {
-        return Ok(new { StudentId = id, AverageScore = 85.5, Attendance = "95%" });
-    }
-}
+

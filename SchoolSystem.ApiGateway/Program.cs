@@ -6,6 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
 // Custom middleware to handle root and health endpoints BEFORE YARP
@@ -55,6 +64,8 @@ app.Use(async (context, next) =>
     
     await next();
 });
+
+app.UseCors("AllowAll");
 
 // Map YARP reverse proxy
 app.MapReverseProxy();
