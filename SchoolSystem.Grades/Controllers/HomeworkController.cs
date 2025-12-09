@@ -28,7 +28,22 @@ public class HomeworkController : ControllerBase
     [HttpGet("class/{classId}")]
     public async Task<IActionResult> GetClassHomework(int classId)
     {
-        var homework = await _context.Homework.Where(h => h.ClassId == classId).ToListAsync();
+        var homework = await _context.Homework
+            .Where(h => h.ClassId == classId)
+            .OrderByDescending(h => h.DueDate)
+            .ToListAsync();
+
+        return Ok(homework);
+    }
+
+    [HttpGet("class/{classId}/subject/{subjectId}")]
+    public async Task<IActionResult> GetClassSubjectHomework(int classId, int subjectId)
+    {
+        var homework = await _context.Homework
+            .Where(h => h.ClassId == classId && h.SubjectId == subjectId)
+            .OrderByDescending(h => h.DueDate)
+            .ToListAsync();
+
         return Ok(homework);
     }
 

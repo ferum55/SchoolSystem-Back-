@@ -40,11 +40,21 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateAttendance(int id, Attendance attendance)
+    public async Task<IActionResult> UpdateAttendance(int id, [FromBody] Attendance attendance)
     {
-        if (id != attendance.Id) return BadRequest();
-        _context.Entry(attendance).State = EntityState.Modified;
+        var existing = await _context.Attendance.FindAsync(id);
+        if (existing == null) return NotFound();
+
+        // Оновлення
+        existing.StudentId = attendance.StudentId;
+        existing.ClassId = attendance.ClassId;
+        existing.Status = attendance.Status;
+        existing.Reason = attendance.Reason;
+        existing.Date = attendance.Date;
+
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Ok(existing);
+
     }
+
 }

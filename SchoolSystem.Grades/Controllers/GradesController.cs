@@ -1,9 +1,9 @@
-using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Grades.Data;
 using SchoolSystem.Grades.Models;
 using SchoolSystem.Shared;
+using MassTransit;
 
 namespace SchoolSystem.Grades.Controllers;
 
@@ -23,16 +23,15 @@ public class GradesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateGrade([FromBody] Models.Grade grade)
+    public async Task<IActionResult> CreateGrade([FromBody] Grade grade)
     {
         grade.Date = DateTime.UtcNow;
-        
+
         _context.Grades.Add(grade);
         await _context.SaveChangesAsync();
 
         _logger.LogInformation($"Grade saved: {grade.Id}");
 
-        // Publish event for Notification Service
         var notificationEvent = new NotificationEvent(grade.StudentId, grade.Id, "Subject", grade.Score, grade.Date);
         await _publishEndpoint.Publish(notificationEvent);
 
@@ -40,7 +39,7 @@ public class GradesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateGrade(int id, Models.Grade grade)
+    public async Task<IActionResult> UpdateGrade(int id, Grade grade)
     {
         if (id != grade.Id) return BadRequest();
         _context.Entry(grade).State = EntityState.Modified;
@@ -56,5 +55,39 @@ public class GradesController : ControllerBase
         _context.Grades.Remove(grade);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpGet("student/{studentId}")]
+    public async Task<IActionResult> GetStudentGrades(int studentId)
+    {
+        var grades = await _context.Grades
+            .Where(g => g.StudentId == studentId)
+            .OrderByDescending(g => g.Date)
+            .ToListAsync();
+
+        return Ok(grades);
+    }
+
+    [HttpGet("student/{studentId}/subject/{subjectId}")]
+    public async Task<IActionResult> GetStudentSubjectGrades(int studentId, int subjectId)
+    {
+        var grades = await _context.Grades
+            .Where(g => g.StudentId == studentId && g.SubjectId == subjectId)
+            .OrderByDescending(g => g.Date)
+            .ToListAsync();
+
+        return Ok(grades);
+    }
+
+    [HttpGet("class/{classId}/subject/{subjectId}")]
+    public async Task<IActionResult> GetClassSubjectGrades(int classId, int subjectId)
+    {
+        var grades = await _context.Grades
+            .Where(g => g.ClassId == classId && g.SubjectId == subjectId)
+            .OrderBy(g => g.StudentId)
+            .ThenBy(g => g.Date)
+            .ToListAsync();
+
+        return Ok(grades);
     }
 }
