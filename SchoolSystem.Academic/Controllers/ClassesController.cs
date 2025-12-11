@@ -50,6 +50,7 @@ public class ClassesController : ControllerBase
         return Ok(students);
     }
 
+
     [HttpGet("{id}/subjects")]
     public async Task<IActionResult> GetSubjectsInClass(int id)
     {
@@ -65,6 +66,23 @@ public class ClassesController : ControllerBase
         return Ok(subjects);
     }
 
+    [HttpGet("teacher/{teacherId}")]
+    public async Task<IActionResult> GetTeacherClasses(int teacherId)
+    {
+        var classes = await _context.TeacherSubjects
+            .Where(ts => ts.TeacherId == teacherId)
+            .Select(ts => ts.ClassId)
+            .Distinct()
+            .Join(_context.Classes,
+                classId => classId,
+                c => c.Id,
+                (classId, c) => new ClassDto(c.Id, c.Name, c.Year))
+            .ToListAsync();
+
+        return Ok(classes);
+    }
+
+
     [HttpPost]
     public async Task<IActionResult> CreateClass(Class classObj)
     {
@@ -73,4 +91,46 @@ public class ClassesController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok(new ClassDto(classObj.Id, classObj.Name, classObj.Year));
     }
+
+    [HttpGet("{classId}/info")]
+    public async Task<IActionResult> GetClassInfo(int classId)
+    {
+        var cls = await _context.Classes.FindAsync(classId);
+        if (cls == null) return NotFound("Class not found");
+
+        var subjects = await _context.TeacherSubjects
+            .Where(ts => ts.ClassId == classId)
+            .Join(_context.Subjects,
+                ts => ts.SubjectId,
+                s => s.Id,
+                (ts, s) => new SubjectDto(s.Id, s.Name, s.Description))
+            .ToListAsync();
+
+        return Ok(new
+        {
+            id = cls.Id,
+            name = cls.Name,
+            year = cls.Year,
+            subjects = subjects
+        });
+    }
+
+    [HttpGet("by-student/{studentId}")]
+    public async Task<IActionResult> GetClassForStudent(int studentId)
+    {
+        // «находимо запис зв'€зку "клас Ц студент"
+        var link = await _context.ClassStudents
+            .FirstOrDefaultAsync(cs => cs.StudentId == studentId);
+
+        if (link == null)
+            return NotFound($"Student {studentId} is not assigned to any class");
+
+        var classObj = await _context.Classes.FindAsync(link.ClassId);
+        if (classObj == null)
+            return NotFound($"Class {link.ClassId} not found");
+
+        return Ok(new ClassDto(classObj.Id, classObj.Name, classObj.Year));
+    }
+
+
 }

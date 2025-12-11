@@ -23,8 +23,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AcademicDbContext>();
-    db.Database.EnsureDeleted(); // Delete existing database
-    db.Database.EnsureCreated(); // Create fresh database
+    //db.Database.EnsureDeleted(); // Delete existing database
+    //db.Database.EnsureCreated(); // Create fresh database
 }
 
 if (app.Environment.IsDevelopment())
@@ -36,13 +36,3 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 app.Run();
 
-[ApiController]
-[Route("[controller]")]
-public class AcademicController : ControllerBase
-{
-    [HttpGet("classes/{id}")]
-    public IActionResult GetClass(string id)
-    {
-        return Ok(new { Id = id, Name = "Math 101", TeacherId = "teacher1" });
-    }
-}

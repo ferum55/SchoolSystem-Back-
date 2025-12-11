@@ -32,12 +32,18 @@ public class Grade
 public class Attendance
 {
     public int Id { get; set; }
+
     public int StudentId { get; set; }
     public int ClassId { get; set; }
-    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public int SubjectId { get; set; }  // дндюмн !!!
+
     public AttendanceStatus Status { get; set; }
-    public string Reason { get; set; } = string.Empty;
+    public string? Reason { get; set; }
+
+    public DateTime Date { get; set; }
 }
+
+
 
 public class Homework
 {

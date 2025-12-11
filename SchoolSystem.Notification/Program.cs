@@ -51,8 +51,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-    db.Database.EnsureDeleted(); // Delete existing database
-    db.Database.EnsureCreated(); // Create fresh database
+    //db.Database.EnsureDeleted(); // Delete existing database
+    //db.Database.EnsureCreated(); // Create fresh database
 }
 
 if (app.Environment.IsDevelopment())

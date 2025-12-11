@@ -90,4 +90,15 @@ public class GradesController : ControllerBase
 
         return Ok(grades);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetGrades([FromQuery] int classId, [FromQuery] int subjectId)
+    {
+        var grades = await _context.Grades
+            .Where(g => g.ClassId == classId && g.SubjectId == subjectId)
+            .ToListAsync();
+
+        return Ok(grades);
+    }
+
 }

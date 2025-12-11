@@ -7,11 +7,20 @@ using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
+
+
+
 
 // DB Context
 builder.Services.AddDbContext<GradesDbContext>(options =>
@@ -54,8 +63,8 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<GradesDbContext>();
-    db.Database.EnsureDeleted(); // Delete existing database
-    db.Database.EnsureCreated(); // Create fresh database
+    //db.Database.EnsureDeleted(); // Delete existing database
+    //db.Database.EnsureCreated(); // Create fresh database
 }
 
 app.UseAuthorization();
@@ -63,3 +72,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+

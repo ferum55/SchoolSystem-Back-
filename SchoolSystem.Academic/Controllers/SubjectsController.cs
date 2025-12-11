@@ -46,4 +46,29 @@ public class SubjectsController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("{id}/info")]
+    public async Task<IActionResult> GetSubjectInfo(int id)
+    {
+        var subject = await _context.Subjects.FindAsync(id);
+        if (subject == null) return NotFound("Subject not found");
+
+        return Ok(new
+        {
+            id = subject.Id,
+            name = subject.Name,
+            description = subject.Description
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSubject(int id)
+    {
+        var subject = await _context.Subjects.FindAsync(id);
+        if (subject == null) return NotFound();
+
+        return Ok(new SubjectDto(subject.Id, subject.Name, subject.Description));
+    }
+
+
 }
