@@ -19,10 +19,17 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseSqlite("Data Source=notification.db"));
 
-// MassTransit
+builder.Services.AddHttpClient("academic", c =>
+{
+    c.BaseAddress = new Uri("http://localhost:5004"); // Academic service
+});
+
+
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<GradeCreatedConsumer>();
+    x.AddConsumer<HomeworkCreatedConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/", h =>
@@ -30,9 +37,25 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
+
         cfg.ConfigureEndpoints(context);
     });
 });
+
+//// MassTransit
+//builder.Services.AddMassTransit(x =>
+//{
+//    x.AddConsumer<GradeCreatedConsumer>();
+//    x.UsingRabbitMq((context, cfg) =>
+//    {
+//        cfg.Host("localhost", "/", h =>
+//        {
+//            h.Username("guest");
+//            h.Password("guest");
+//        });
+//        cfg.ConfigureEndpoints(context);
+//    });
+//});
 
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()
@@ -51,6 +74,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+
     //db.Database.EnsureDeleted(); // Delete existing database
     //db.Database.EnsureCreated(); // Create fresh database
 }

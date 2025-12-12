@@ -1,39 +1,40 @@
-using MassTransit;
+﻿using MassTransit;
 using SchoolSystem.Notification.Data;
 using SchoolSystem.Notification.Models;
 using SchoolSystem.Shared;
 
+using SharedNotificationType = SchoolSystem.Shared.NotificationType;
+using DbNotificationType = SchoolSystem.Notification.Models.NotificationType;
+
 namespace SchoolSystem.Notification.Consumers;
 
-public class GradeCreatedConsumer : IConsumer<NotificationEvent>
+public class GradeCreatedConsumer : IConsumer<GradeCreatedEvent>
 {
     private readonly NotificationDbContext _context;
-    private readonly ILogger<GradeCreatedConsumer> _logger;
 
-    public GradeCreatedConsumer(NotificationDbContext context, ILogger<GradeCreatedConsumer> logger)
+    public GradeCreatedConsumer(NotificationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
-    public async Task Consume(ConsumeContext<NotificationEvent> context)
+    public async Task Consume(ConsumeContext<GradeCreatedEvent> ctx)
     {
-        var message = context.Message;
-        _logger.LogInformation($"Received grade notification for student {message.StudentId}");
+        var e = ctx.Message;
 
-        var notification = new Models.Notification
+        var notification = new SchoolSystem.Notification.Models.Notification
         {
-            UserId = message.StudentId,
-            Type = NotificationType.Grade,
-            Title = "New Grade Received",
-            Message = $"You received a grade of {message.Score} in {message.Subject}",
-            CreatedAt = DateTime.UtcNow,
+            UserId = e.StudentId,
+            Type = SchoolSystem.Notification.Models.NotificationType.Grade,
+            Title = "New grade received",
+            Message = $"Grade: {e.Score} ({e.GradeType})",
+            ClassId = e.ClassId,
+            SubjectId = e.SubjectId,
+            EntityId = e.GradeId,
             IsRead = false
         };
 
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
-
-        _logger.LogInformation($"Notification saved for user {notification.UserId}");
     }
 }
+

@@ -4,6 +4,11 @@ using SchoolSystem.Notification.Data;
 using SchoolSystem.Notification.Models;
 using SchoolSystem.Shared;
 
+
+using SharedNotificationType = SchoolSystem.Shared.NotificationType;
+using DbNotificationType = SchoolSystem.Notification.Models.NotificationType;
+
+
 namespace SchoolSystem.Notification.Controllers;
 
 [ApiController]
@@ -13,32 +18,13 @@ public class NotificationsController : ControllerBase
     private readonly NotificationDbContext _context;
     private readonly ILogger<NotificationsController> _logger;
 
+
     public NotificationsController(NotificationDbContext context, ILogger<NotificationsController> logger)
     {
         _context = context;
         _logger = logger;
     }
 
-    [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserNotifications(int userId)
-    {
-        var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId)
-            .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
-        return Ok(notifications);
-    }
-
-    [HttpPut("{id}/read")]
-    public async Task<IActionResult> MarkAsRead(int id)
-    {
-        var notification = await _context.Notifications.FindAsync(id);
-        if (notification == null) return NotFound();
-
-        notification.IsRead = true;
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteNotification(int id)
@@ -51,25 +37,69 @@ public class NotificationsController : ControllerBase
         return NoContent();
     }
 
-    // Endpoint for manual notification creation (e.g. from other services via HTTP)
-    [HttpPost]
-    public async Task<IActionResult> CreateNotification([FromBody] NotificationEvent notificationEvent)
+
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserNotifications(int userId, int page = 1, int pageSize = 10)
     {
-        var notification = new Models.Notification
+        var query = _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .OrderByDescending(n => n.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new { total, page, pageSize, items });
+    }
+
+
+    [HttpPut("{id}/read")]
+    public async Task<IActionResult> MarkAsRead(int id)
+    {
+        var n = await _context.Notifications.FindAsync(id);
+        if (n == null) return NotFound();
+
+        n.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
         {
-            UserId = notificationEvent.StudentId,
-            Type = NotificationType.Grade,
-            Title = "New Grade Received",
-            Message = $"You received a grade of {notificationEvent.Score} in {notificationEvent.Subject}",
-            CreatedAt = DateTime.UtcNow,
+            n.Type,
+            n.ClassId,
+            n.SubjectId,
+            n.EntityId
+        });
+    }
+
+    [HttpPost("classic")]
+    public async Task<IActionResult> CreateClassic([FromBody] CreateNotificationRequest req)
+    {
+        var notification = new SchoolSystem.Notification.Models.Notification
+        {
+            UserId = req.UserId,
+            Type = req.Type == SchoolSystem.Shared.NotificationType.Homework
+                ? Models.NotificationType.Homework
+                : Models.NotificationType.Grade,
+
+            Title = req.Title,
+            Message = req.Message,
+
+            ClassId = req.ClassId,
+            SubjectId = req.SubjectId,
+            EntityId = req.EntityId,
+
             IsRead = false
         };
 
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
-        
-        _logger.LogInformation($"Notification created for user {notification.UserId}");
-        
-        return Ok(notification);
+
+        return Ok();
     }
+
+
+
 }

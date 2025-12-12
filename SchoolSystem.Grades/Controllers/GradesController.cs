@@ -32,8 +32,17 @@ public class GradesController : ControllerBase
 
         _logger.LogInformation($"Grade saved: {grade.Id}");
 
-        var notificationEvent = new NotificationEvent(grade.StudentId, grade.Id, "Subject", grade.Score, grade.Date);
-        await _publishEndpoint.Publish(notificationEvent);
+        await _publishEndpoint.Publish(new GradeCreatedEvent
+        {
+            StudentId = grade.StudentId,
+            ClassId = grade.ClassId,
+            SubjectId = grade.SubjectId,
+            GradeId = grade.Id,
+            Score = grade.Score,
+            GradeType = grade.Type.ToString()
+        });
+
+
 
         return Ok(grade);
     }
