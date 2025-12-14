@@ -2,6 +2,9 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Exporter; // Äëÿ ZipkinExportProtocol
+using OpenTelemetry.Instrumentation.MassTransit; // Äëÿ AddMassTransitInstrumentation
+using OpenTelemetry.Instrumentation.Http;
 using SchoolSystem.Notification.Consumers;
 using SchoolSystem.Notification.Data;
 
@@ -58,15 +61,27 @@ builder.Services.AddMassTransit(x =>
 //});
 
 // OpenTelemetry
+
+
 builder.Services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder =>
+    .WithTracing(b =>
     {
-        tracerProviderBuilder
-            .AddSource("SchoolSystem.Notification")
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("SchoolSystem.Notification"))
-            .AddAspNetCoreInstrumentation()
-            .AddConsoleExporter();
+        b
+         .SetResourceBuilder(
+             ResourceBuilder.CreateDefault()
+                 .AddService("schoolsystem.notification")
+         )
+         .SetSampler(new AlwaysOnSampler())
+         .AddSource("SchoolSystem.Notification")
+         .AddAspNetCoreInstrumentation()
+         .AddHttpClientInstrumentation()
+         .AddMassTransitInstrumentation()
+         .AddZipkinExporter(o =>
+         {
+             o.Endpoint = new Uri("http://localhost:9411/api/v2/spans");
+         });
     });
+
 
 var app = builder.Build();
 

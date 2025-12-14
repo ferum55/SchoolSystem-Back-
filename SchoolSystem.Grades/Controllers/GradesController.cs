@@ -1,9 +1,10 @@
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Grades.Data;
 using SchoolSystem.Grades.Models;
 using SchoolSystem.Shared;
-using MassTransit;
+using System.Diagnostics;
 
 namespace SchoolSystem.Grades.Controllers;
 
@@ -14,8 +15,11 @@ public class GradesController : ControllerBase
     private readonly GradesDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<GradesController> _logger;
+    private static readonly ActivitySource ActivitySource =
+    new("SchoolSystem.Grades");
 
-    public GradesController(GradesDbContext context, IPublishEndpoint publishEndpoint, ILogger<GradesController> logger)
+
+public GradesController(GradesDbContext context, IPublishEndpoint publishEndpoint, ILogger<GradesController> logger)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
@@ -25,6 +29,7 @@ public class GradesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateGrade([FromBody] Grade grade)
     {
+        using var activity = ActivitySource.StartActivity("CreateGrade");
         grade.Date = DateTime.UtcNow;
 
         _context.Grades.Add(grade);

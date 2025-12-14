@@ -3,23 +3,18 @@ version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: schoolsystem-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-
-  postgres:
-    image: postgres:15
+  
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: schoolsystem-zipkin
     ports:
-      - "5432:5432"
+      - "9411:9411" # Zipkin UI
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: grades_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+      STORAGE_TYPE: mem # Використовувати пам'ять для зберігання трасування

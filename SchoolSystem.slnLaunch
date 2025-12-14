@@ -11,10 +11,6 @@
         "Action": "StartWithoutDebugging"
       },
       {
-        "Path": "SchoolSystem.User\\SchoolSystem.User.csproj",
-        "Action": "StartWithoutDebugging"
-      },
-      {
         "Path": "SchoolSystem.Academic\\SchoolSystem.Academic.csproj",
         "Action": "StartWithoutDebugging"
       },
@@ -24,6 +20,10 @@
       },
       {
         "Path": "SchoolSystem.ApiGateway\\SchoolSystem.ApiGateway.csproj",
+        "Action": "StartWithoutDebugging"
+      },
+      {
+        "Path": "SchoolSystem.User\\SchoolSystem.User.csproj",
         "Action": "StartWithoutDebugging"
       }
     ]

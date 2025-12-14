@@ -1,9 +1,12 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Grades.Data;
 using SchoolSystem.Shared;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Exporter; // Для ZipkinExportProtocol
+using OpenTelemetry.Instrumentation.MassTransit; // Для AddMassTransitInstrumentation
+using OpenTelemetry.Instrumentation.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +23,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
 
-
-
 // DB Context
 builder.Services.AddDbContext<GradesDbContext>(options =>
     options.UseSqlite("Data Source=grades.db"));
@@ -36,19 +37,29 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
+        cfg.ConfigureEndpoints(context);
     });
 });
 
-// OpenTelemetry
 builder.Services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder =>
+    .WithTracing(b =>
     {
-        tracerProviderBuilder
-            .AddSource("SchoolSystem.Grades")
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("SchoolSystem.Grades"))
-            .AddAspNetCoreInstrumentation()
-            .AddConsoleExporter();
+        b
+         .SetResourceBuilder(
+             ResourceBuilder.CreateDefault()
+                 .AddService("schoolsystem.grades")
+         )
+         .SetSampler(new AlwaysOnSampler())
+         .AddSource("SchoolSystem.Grades")
+         .AddAspNetCoreInstrumentation()
+         .AddMassTransitInstrumentation()
+         .AddZipkinExporter(o =>
+         {
+             o.Endpoint = new Uri("http://localhost:9411/api/v2/spans");
+         });
     });
+
+
 
 var app = builder.Build();
 
@@ -72,5 +83,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-

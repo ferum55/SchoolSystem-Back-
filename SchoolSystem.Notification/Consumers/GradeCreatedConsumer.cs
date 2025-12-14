@@ -2,15 +2,19 @@
 using SchoolSystem.Notification.Data;
 using SchoolSystem.Notification.Models;
 using SchoolSystem.Shared;
-
-using SharedNotificationType = SchoolSystem.Shared.NotificationType;
+using System.Diagnostics;
 using DbNotificationType = SchoolSystem.Notification.Models.NotificationType;
+using SharedNotificationType = SchoolSystem.Shared.NotificationType;
+using System.Diagnostics;
+
 
 namespace SchoolSystem.Notification.Consumers;
 
 public class GradeCreatedConsumer : IConsumer<GradeCreatedEvent>
 {
     private readonly NotificationDbContext _context;
+    private static readonly ActivitySource ActivitySource =
+    new("SchoolSystem.Notification");
 
     public GradeCreatedConsumer(NotificationDbContext context)
     {
@@ -19,6 +23,7 @@ public class GradeCreatedConsumer : IConsumer<GradeCreatedEvent>
 
     public async Task Consume(ConsumeContext<GradeCreatedEvent> ctx)
     {
+        using var activity = ActivitySource.StartActivity("HandleGradeCreated");
         var e = ctx.Message;
 
         var notification = new SchoolSystem.Notification.Models.Notification
