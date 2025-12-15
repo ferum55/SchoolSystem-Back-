@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   rabbitmq:
@@ -10,11 +10,19 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-  
-  zipkin:
-    image: openzipkin/zipkin
-    container_name: schoolsystem-zipkin
+
+  grades-service:
+    build:
+      context: .
+      dockerfile: SchoolSystem.Grades/Dockerfile
+    container_name: schoolsystem-grades
     ports:
-      - "9411:9411" # Zipkin UI
+      - "5001:8080"
     environment:
-      STORAGE_TYPE: mem # Використовувати пам'ять для зберігання трасування
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: "Data Source=/app/grades.db"
+    volumes:
+      - ./SchoolSystem.Grades/grades.db:/app/grades.db
+    depends_on:
+      - rabbitmq
+

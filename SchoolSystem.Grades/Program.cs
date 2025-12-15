@@ -32,7 +32,7 @@ builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", "/", h =>
+        cfg.Host("rabbitmq", "/", h =>
         {
             h.Username("guest");
             h.Password("guest");
@@ -55,7 +55,7 @@ builder.Services.AddOpenTelemetry()
          .AddMassTransitInstrumentation()
          .AddZipkinExporter(o =>
          {
-             o.Endpoint = new Uri("http://localhost:9411/api/v2/spans");
+             o.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
          });
     });
 

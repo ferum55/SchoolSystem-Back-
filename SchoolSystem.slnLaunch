@@ -3,19 +3,11 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "SchoolSystem.Grades\\SchoolSystem.Grades.csproj",
-        "Action": "StartWithoutDebugging"
-      },
-      {
         "Path": "SchoolSystem.Notification\\SchoolSystem.Notification.csproj",
         "Action": "StartWithoutDebugging"
       },
       {
         "Path": "SchoolSystem.Academic\\SchoolSystem.Academic.csproj",
-        "Action": "StartWithoutDebugging"
-      },
-      {
-        "Path": "SchoolSystem.Reporting\\SchoolSystem.Reporting.csproj",
         "Action": "StartWithoutDebugging"
       },
       {
