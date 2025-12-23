@@ -45,23 +45,6 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-//// MassTransit
-//builder.Services.AddMassTransit(x =>
-//{
-//    x.AddConsumer<GradeCreatedConsumer>();
-//    x.UsingRabbitMq((context, cfg) =>
-//    {
-//        cfg.Host("localhost", "/", h =>
-//        {
-//            h.Username("guest");
-//            h.Password("guest");
-//        });
-//        cfg.ConfigureEndpoints(context);
-//    });
-//});
-
-// OpenTelemetry
-
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(b =>

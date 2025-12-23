@@ -1,0 +1,6 @@
+FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0-preview
+WORKDIR /app
+COPY . .
+RUN dotnet restore SchoolSystem.Grades/SchoolSystem.Grades.csproj
+RUN dotnet publish SchoolSystem.Grades/SchoolSystem.Grades.csproj -c Release -o /app/publish
+ENTRYPOINT ["dotnet", "/app/publish/SchoolSystem.Grades.dll"]
